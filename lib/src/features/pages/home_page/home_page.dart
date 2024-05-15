@@ -76,6 +76,21 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           Positioned(
+            bottom: 180,
+            left: 50,
+            child: OutlinedButton.icon(
+              style: OutlinedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 6,
+                  vertical: 4,
+                ),
+              ),
+              onPressed: () {},
+              label: const Text('Masofa'),
+              icon: const Icon(Icons.polyline_sharp),
+            ),
+          ),
+          Positioned(
             right: 10,
             bottom: 180,
             child: IconButton(
