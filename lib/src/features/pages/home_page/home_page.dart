@@ -18,6 +18,7 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final LocationRepository locationService;
   late final Completer<YandexMapController> yandexMapController;
+  ValueNotifier<LocationModel?> locationModelNotifier = ValueNotifier(null);
 
   @override
   void initState() {
@@ -31,19 +32,22 @@ class _HomePageState extends State<HomePage> {
     if (!await locationService.checkPermission()) {
       await locationService.requestPermission();
     }
-    LocationModel model = await locationService.getCurrentLocation();
-    (await yandexMapController.future).moveCamera(
-      animation: const MapAnimation(type: MapAnimationType.linear, duration: 1),
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: Point(
-            latitude: model.latitude,
-            longitude: model.longitude,
+    locationModelNotifier.value = await locationService.getCurrentLocation();
+    if (locationModelNotifier.value != null) {
+      (await yandexMapController.future).moveCamera(
+        animation:
+            const MapAnimation(type: MapAnimationType.linear, duration: 1),
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: Point(
+              latitude: locationModelNotifier.value!.latitude,
+              longitude: locationModelNotifier.value!.longitude,
+            ),
+            zoom: 16,
           ),
-          zoom: 12,
         ),
-      ),
-    );
+      );
+    }
   }
 
   @override
@@ -56,23 +60,42 @@ class _HomePageState extends State<HomePage> {
             top: 0,
             right: 0,
             bottom: 0,
-            child: YandexMap(
-              onMapCreated: (controller) {
-                DependencyScope.of(context)
-                    .mapControllerCompleter
-                    .complete(controller);
+            child: ValueListenableBuilder(
+              builder: (context, value, child) {
+                if (value == null) {
+                  return YandexMap(
+                    onMapCreated: (controller) {
+                      DependencyScope.of(context)
+                          .mapControllerCompleter
+                          .complete(controller);
+                    },
+                  );
+                } else {
+                  return YandexMap(
+                    onMapCreated: (controller) {
+                      DependencyScope.of(context)
+                          .mapControllerCompleter
+                          .complete(controller);
+                    },
+                    mapObjects: [
+                      PlacemarkMapObject(
+                        mapId: MapObjectId('MapObject $value'),
+                        point: Point(latitude: value.latitude, longitude: value.longitude),
+                        opacity: 1,
+                        icon: PlacemarkIcon.single(
+                          PlacemarkIconStyle(
+                            image: BitmapDescriptor.fromAssetImage(
+                              'assets/images/location.png',
+                            ),
+                            scale: 0.3,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }
               },
-            ),
-          ),
-          const Positioned(
-            left: 0,
-            top: 0,
-            right: 0,
-            bottom: 0,
-            child: Icon(
-              Icons.location_on,
-              color: Colors.red,
-              size: 40,
+              valueListenable: locationModelNotifier,
             ),
           ),
           Positioned(
