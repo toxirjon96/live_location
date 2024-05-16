@@ -10,7 +10,12 @@ class DistanceResponse {
   factory DistanceResponse.fromJson(Map<String, Object?> json) {
     return DistanceResponse(
       message: json['message'] as double,
-      status: json['status,'] as int,
+      status: json['status'] as int,
     );
+  }
+
+  @override
+  String toString() {
+    return 'DistanceResponse{message: $message, status: $status}';
   }
 }

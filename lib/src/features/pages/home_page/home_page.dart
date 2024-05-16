@@ -5,8 +5,11 @@ import 'package:yandex_mapkit/yandex_mapkit.dart';
 
 import '../../../common/constant/app_color.dart';
 import '../../../common/dependency/scope/dependency_scope.dart';
+import 'controller/location_controller.dart';
+import 'model/distance_response.dart';
 import 'model/location_model.dart';
 import 'repository/location_repository.dart';
+import 'service/api_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,14 +21,30 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   late final LocationRepository locationService;
   late final Completer<YandexMapController> yandexMapController;
+  late final LocationController locationController;
   ValueNotifier<LocationModel?> locationModelNotifier = ValueNotifier(null);
 
   @override
   void initState() {
     locationService = DependencyScope.of(context).locationRepository;
     yandexMapController = DependencyScope.of(context).mapControllerCompleter;
+    locationController = LocationController(
+      apiRequestRepository: ApiServiceImpl(
+          requestRepository: DependencyScope.of(context).requestRepository),
+    );
     _moveToCurrentLocation();
     super.initState();
+  }
+  void calculateDistance(){
+    _getDistance();
+  }
+  void _getDistance() async {
+    if (locationModelNotifier.value != null) {
+      DistanceResponse distanceResponse = await locationController.getDistance(
+        locationModelNotifier.value!,
+      );
+      print(distanceResponse);
+    }
   }
 
   Future<void> _moveToCurrentLocation() async {
@@ -80,7 +99,9 @@ class _HomePageState extends State<HomePage> {
                     mapObjects: [
                       PlacemarkMapObject(
                         mapId: MapObjectId('MapObject $value'),
-                        point: Point(latitude: value.latitude, longitude: value.longitude),
+                        point: Point(
+                            latitude: value.latitude,
+                            longitude: value.longitude),
                         opacity: 1,
                         icon: PlacemarkIcon.single(
                           PlacemarkIconStyle(
@@ -103,12 +124,14 @@ class _HomePageState extends State<HomePage> {
             left: 50,
             child: OutlinedButton.icon(
               style: OutlinedButton.styleFrom(
+                foregroundColor: AppColor.whiteColor,
+                backgroundColor: AppColor.mainColor,
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
-                  vertical: 4,
+                  horizontal: 20,
+                  vertical: 10,
                 ),
               ),
-              onPressed: () {},
+              onPressed: calculateDistance,
               label: const Text('Masofa'),
               icon: const Icon(Icons.polyline_sharp),
             ),

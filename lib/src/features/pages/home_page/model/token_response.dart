@@ -13,4 +13,8 @@ class TokenResponse {
       access: json['access'] as String,
     );
   }
+  @override
+  String toString() {
+    return 'TokenResponse{refresh: $refresh, access: $access}';
+  }
 }
